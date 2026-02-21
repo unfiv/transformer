@@ -21,7 +21,7 @@ public:
 class JsonStatsWriter : public IStatsWriter
 {
 public:
-    void write(const std::string& output_file, const std::vector<TimingEntry>& timings) const override;
+    void write(const std::string& output_file, const StatsReport& stats) const override;
 };
 
 } // namespace transformer

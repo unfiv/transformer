@@ -28,5 +28,5 @@ add_custom_target(stress
         -DRUNS=${STRESS_RUNS}
         -P ${CMAKE_SOURCE_DIR}/tests/stress/run_stress.cmake
     DEPENDS transformer
-    COMMENT "Run stress test (runs transformer multiple times and collects aggregated stats)"
+    COMMENT "Run stress test (single transformer run with --bench and aggregated stats)"
 )

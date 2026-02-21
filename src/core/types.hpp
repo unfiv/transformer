@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -62,6 +63,7 @@ struct AppInput
     std::string new_pose_file;
     std::string output_mesh_file;
     std::string stats_file;
+    std::size_t bench_runs = 1;
 };
 
 } // namespace transformer
