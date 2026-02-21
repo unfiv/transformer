@@ -1,0 +1,123 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 27, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "release",
+      "displayName": "Ninja Release",
+      "description": "Configure project with Ninja generator and Release build type",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENFORCE_ENV": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Ninja Debug",
+      "description": "Configure project with Ninja generator and Debug build type",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENFORCE_ENV": "ON"
+      }
+    },
+    {
+      "name": "relwithdeb",
+      "displayName": "Ninja RelWithDebInfo",
+      "description": "Configure project with Ninja generator and RelWithDebInfo build type",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENFORCE_ENV": "ON"
+      }
+    },
+    {
+      "name": "windows-msvc-release",
+      "displayName": "Windows MSVC + Ninja Release",
+      "description": "Configure on Windows using MSVC toolchain with Ninja generator (Release)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENFORCE_ENV": "ON",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_C_STANDARD": "11",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-msvc-debug",
+      "displayName": "Windows MSVC + Ninja Debug",
+      "description": "Configure on Windows using MSVC toolchain with Ninja generator (Debug)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "ENFORCE_ENV": "ON",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_C_STANDARD": "11",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build",
+      "displayName": "Build (Release)",
+      "configurePreset": "release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-debug",
+      "displayName": "Build (Debug)",
+      "configurePreset": "debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "build-relwithdeb",
+      "displayName": "Build (RelWithDebInfo)",
+      "configurePreset": "relwithdeb",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "build-win-release",
+      "displayName": "Build Windows MSVC (Release)",
+      "configurePreset": "windows-msvc-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "build-win-debug",
+      "displayName": "Build Windows MSVC (Debug)",
+      "configurePreset": "windows-msvc-debug",
+      "configuration": "Debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test",
+      "displayName": "Run tests (Release)",
+      "configurePreset": "release"
+    }
+  ]
+}
