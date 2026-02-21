@@ -10,7 +10,7 @@
 using transformer::AppInput;
 using transformer::JsonBonePoseReader;
 using transformer::JsonStatsWriter;
-using transformer::JsonWeightsReader;
+using transformer::JsonBoneWeightsReader;
 using transformer::MeshSkinner;
 using transformer::ObjMeshReader;
 using transformer::ObjMeshWriter;
@@ -50,12 +50,12 @@ int main(int argc, char** argv)
     };
 
     const ObjMeshReader mesh_reader;
-    const JsonWeightsReader weights_reader;
+    const JsonBoneWeightsReader bone_weights_reader;
     const JsonBonePoseReader pose_reader;
     const ObjMeshWriter mesh_writer;
     const JsonStatsWriter stats_writer;
     const MeshSkinner skinner;
 
-    const SkinningApp app(mesh_reader, weights_reader, pose_reader, mesh_writer, stats_writer, skinner);
+    const SkinningApp app(mesh_reader, bone_weights_reader, pose_reader, mesh_writer, stats_writer, skinner);
     return app.run(input);
 }

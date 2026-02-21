@@ -13,11 +13,11 @@ public:
     virtual Mesh read(const std::string& mesh_file, Profiler& profiler) const = 0;
 };
 
-class IWeightsReader
+class IBoneWeightsReader
 {
 public:
-    virtual ~IWeightsReader() = default;
-    virtual SkinningData read(const std::string& weights_file, Profiler& profiler) const = 0;
+    virtual ~IBoneWeightsReader() = default;
+    virtual BoneWeightsData read(const std::string& weights_file, Profiler& profiler) const = 0;
 };
 
 class IBonePoseReader

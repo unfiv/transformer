@@ -5,10 +5,10 @@
 namespace transformer
 {
 
-class JsonWeightsReader : public IWeightsReader
+class JsonBoneWeightsReader : public IBoneWeightsReader
 {
 public:
-    SkinningData read(const std::string& weights_file, Profiler& profiler) const override;
+    BoneWeightsData read(const std::string& weights_file, Profiler& profiler) const override;
 };
 
 class JsonBonePoseReader : public IBonePoseReader
