@@ -33,6 +33,15 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT transformer)
 set(ASSETS_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 # Keep assets near executable for local runs.
+add_custom_target(copy_assets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${ASSETS_SOURCE_DIR}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    COMMENT "Copying assets to output directory"
+)
+
+add_dependencies(copy_assets ${PROJECT_NAME})
+
 if(EXISTS "${ASSETS_SOURCE_DIR}")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
@@ -41,7 +50,7 @@ if(EXISTS "${ASSETS_SOURCE_DIR}")
         VERBATIM
     )
 else()
-    message(STATUS "assets directory not found; skipping post-build asset sync")
+    message(STATUS "assets directory not found;   skipping post-build asset sync")
 endif()
 
 # TODO: Integration tests
