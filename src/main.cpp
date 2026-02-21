@@ -1,11 +1,29 @@
+#include "app/app.hpp"
+#include "io/json_readers.hpp"
+#include "skinning/mesh_skinner.hpp"
+#include "io/obj_io.hpp"
+#include "core/types.hpp"
+
 #include <iostream>
 #include <string>
 
+using transformer::AppInput;
+using transformer::JsonBonePoseReader;
+using transformer::JsonStatsWriter;
+using transformer::JsonWeightsReader;
+using transformer::MeshSkinner;
+using transformer::ObjMeshReader;
+using transformer::ObjMeshWriter;
+using transformer::SkinningApp;
+
 static void print_help(const char* prog)
 {
-    std::cerr << "Usage: " << (prog ? prog : "cli_one_arg")
-              << " <meshFile> <boneWeightFile> <inverseBindPoseFile> <newPoseFile> <resultFile>\n";
-    std::cerr << "Provide all 5 file paths in order. Pass --help or -h to show this message.\n";
+    std::cerr << "Usage: " << (prog ? prog : "transformer")
+              << " <meshFile.obj> <boneWeightFile.json> <inverseBindPoseFile.json>"
+                 " <newPoseFile.json> <resultFile.obj> <statsFile.json>\n";
+    std::cerr << "Input format:\n"
+                 "  - weights json: { \"vertices\": [ { \"bone_indices\": [0,1,...], \"weights\": [..] }, ... ] }\n"
+                 "  - pose json: { \"bones\": [ { \"matrix\": [16 column-major float values] }, ... ] }\n";
 }
 
 int main(int argc, char** argv)
@@ -16,23 +34,28 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (argc != 6)
+    if (argc != 7)
     {
         print_help(argc > 0 ? argv[0] : nullptr);
         return 1;
     }
 
-    std::string meshFile = argv[1];
-    std::string boneWeightFile = argv[2];
-    std::string inverseBindPoseFile = argv[3];
-    std::string newPoseFile = argv[4];
-    std::string resultFile = argv[5];
+    const AppInput input{
+        .mesh_file = argv[1],
+        .weights_file = argv[2],
+        .inverse_bind_pose_file = argv[3],
+        .new_pose_file = argv[4],
+        .output_mesh_file = argv[5],
+        .stats_file = argv[6],
+    };
 
-    std::cout << "meshFile: " << meshFile << std::endl;
-    std::cout << "boneWeightFile: " << boneWeightFile << std::endl;
-    std::cout << "inverseBindPoseFile: " << inverseBindPoseFile << std::endl;
-    std::cout << "newPoseFile: " << newPoseFile << std::endl;
-    std::cout << "resultFile: " << resultFile << std::endl;
+    const ObjMeshReader mesh_reader;
+    const JsonWeightsReader weights_reader;
+    const JsonBonePoseReader pose_reader;
+    const ObjMeshWriter mesh_writer;
+    const JsonStatsWriter stats_writer;
+    const MeshSkinner skinner;
 
-    return 0;
+    const SkinningApp app(mesh_reader, weights_reader, pose_reader, mesh_writer, stats_writer, skinner);
+    return app.run(input);
 }
