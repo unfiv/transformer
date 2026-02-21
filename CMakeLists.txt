@@ -17,6 +17,11 @@ else()
     message(WARNING "clang-format not found. Target 'format' will not be available.")
 endif()
 
+# Optional: add stress tests (separate track, custom target)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/stress/CMakeLists.txt")
+    add_subdirectory(tests/stress)
+endif()
+
 # Executable
 add_executable(transformer ${SOURCES})
 
