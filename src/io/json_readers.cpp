@@ -255,6 +255,19 @@ private:
 std::string read_file_to_string(const std::string& path)
 {
     std::ifstream input(path);
+
+    if (!input)
+    {
+        std::string fallback = path;
+        constexpr char kCommonTypo[] = "asserts/";
+        const std::size_t typo_pos = fallback.find(kCommonTypo);
+        if (typo_pos != std::string::npos)
+        {
+            fallback.replace(typo_pos, std::char_traits<char>::length(kCommonTypo), "assets/");
+            input.open(fallback);
+        }
+    }
+
     if (!input)
     {
         throw std::runtime_error("Failed to open file: " + path);
@@ -339,8 +352,8 @@ VertexBoneWeights parse_vertex_weights(const JsonValue& value)
     const JsonObject& vertex_object = as_object(value, "Weights JSON parse error: each vertex must be an object");
     VertexBoneWeights vertex_bone_weights;
 
-    const JsonValue* indices_value = find_key(vertex_object, { "bone_indices", "boneIndices", "indices", "joints" });
-    const JsonValue* weights_value = find_key(vertex_object, { "weights", "bone_weights", "boneWeights" });
+    const JsonValue* indices_value = find_key(vertex_object, { "bone_indices", "boneIndices", "indices", "joints", "index" });
+    const JsonValue* weights_value = find_key(vertex_object, { "weights", "bone_weights", "boneWeights", "weight" });
 
     if (indices_value != nullptr && weights_value != nullptr)
     {
@@ -407,28 +420,44 @@ BoneWeightsData parse_bone_weights_data(const JsonValue& root)
 
 std::vector<Mat4> parse_bone_matrices(const JsonValue& root)
 {
-    const JsonObject& root_object = as_object(root, "Pose JSON parse error: root value must be object");
-    const JsonValue* bones_value = find_key(root_object, { "bones" });
-    if (bones_value == nullptr)
+    const JsonArray* bones = nullptr;
+    if (const auto* root_array = std::get_if<JsonArray>(&root.value))
     {
-        throw std::runtime_error("Pose JSON parse error: expected 'bones' array in root object");
+        bones = root_array;
+    }
+    else
+    {
+        const JsonObject& root_object = as_object(root, "Pose JSON parse error: root value must be object or array");
+        const JsonValue* bones_value = find_key(root_object, { "bones" });
+        if (bones_value == nullptr)
+        {
+            throw std::runtime_error("Pose JSON parse error: expected 'bones' array in root object");
+        }
+        bones = &as_array(*bones_value, "Pose JSON parse error: bones must be an array");
     }
 
-    const JsonArray& bones = as_array(*bones_value, "Pose JSON parse error: bones must be an array");
     std::vector<Mat4> matrices;
-    matrices.reserve(bones.size());
+    matrices.reserve(bones->size());
 
-    for (const JsonValue& bone_value : bones)
+    for (const JsonValue& bone_value : *bones)
     {
-        const JsonObject& bone_object = as_object(bone_value, "Pose JSON parse error: each bone must be an object");
-        const JsonValue* matrix_value = find_key(bone_object, { "matrix" });
-        if (matrix_value == nullptr)
+        const JsonArray* matrix_values = nullptr;
+        if (const auto* direct_matrix = std::get_if<JsonArray>(&bone_value.value))
         {
-            throw std::runtime_error("Pose JSON parse error: bone object must contain 'matrix' array");
+            matrix_values = direct_matrix;
+        }
+        else
+        {
+            const JsonObject& bone_object = as_object(bone_value, "Pose JSON parse error: each bone must be an object or matrix array");
+            const JsonValue* matrix_value = find_key(bone_object, { "matrix" });
+            if (matrix_value == nullptr)
+            {
+                throw std::runtime_error("Pose JSON parse error: bone object must contain 'matrix' array");
+            }
+            matrix_values = &as_array(*matrix_value, "Pose JSON parse error: matrix must be an array");
         }
 
-        const JsonArray& matrix_values = as_array(*matrix_value, "Pose JSON parse error: matrix must be an array");
-        if (matrix_values.size() != 16)
+        if (matrix_values->size() != 16)
         {
             throw std::runtime_error("Pose JSON parse error: matrix must contain exactly 16 numeric values");
         }
@@ -436,7 +465,7 @@ std::vector<Mat4> parse_bone_matrices(const JsonValue& root)
         Mat4 matrix{};
         for (std::size_t i = 0; i < 16; ++i)
         {
-            matrix.m[i] = static_cast<float>(as_number(matrix_values[i], "Pose JSON parse error: matrix element must be numeric"));
+            matrix.m[i] = static_cast<float>(as_number((*matrix_values)[i], "Pose JSON parse error: matrix element must be numeric"));
         }
         matrices.push_back(matrix);
     }
