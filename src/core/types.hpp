@@ -29,7 +29,7 @@ struct Mat4
     std::array<float, 16> m{};
 };
 
-struct VertexInfluence
+struct VertexBoneWeights
 {
     std::array<std::int32_t, 4> bone_indices{ -1, -1, -1, -1 };
     std::array<float, 4> weights{ 0.0F, 0.0F, 0.0F, 0.0F };
@@ -43,9 +43,9 @@ struct Mesh
     std::vector<std::int32_t> indices;
 };
 
-struct SkinningData
+struct BoneWeightsData
 {
-    std::vector<VertexInfluence> influences;
+    std::vector<VertexBoneWeights> per_vertex_weights;
 };
 
 struct BonePoseData

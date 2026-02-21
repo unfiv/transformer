@@ -7,15 +7,15 @@
 namespace transformer
 {
 
-SkinningApp::SkinningApp(const IMeshReader& mesh_reader, const IWeightsReader& weights_reader,
-                         const IBonePoseReader& pose_reader, const IMeshWriter& mesh_writer,
-                         const IStatsWriter& stats_writer, const MeshSkinner& skinner)
+SkinningApp::SkinningApp(const IMeshReader& mesh_reader, const IBoneWeightsReader& bone_weights_reader,
+                         const IBonePoseReader& bone_pose_reader, const IMeshWriter& mesh_writer,
+                         const IStatsWriter& stats_writer, const MeshSkinner& mesh_skinner)
     : mesh_reader_(mesh_reader)
-    , weights_reader_(weights_reader)
-    , pose_reader_(pose_reader)
+    , bone_weights_reader_(bone_weights_reader)
+    , bone_pose_reader_(bone_pose_reader)
     , mesh_writer_(mesh_writer)
     , stats_writer_(stats_writer)
-    , skinner_(skinner)
+    , mesh_skinner_(mesh_skinner)
 {
 }
 
@@ -26,14 +26,15 @@ int SkinningApp::run(const AppInput& input) const
 
     try
     {
-        const Mesh mesh = mesh_reader_.read(input.mesh_file, profiler);
-        const SkinningData skinning_data = weights_reader_.read(input.weights_file, profiler);
+        const Mesh source_mesh = mesh_reader_.read(input.mesh_file, profiler);
+        const BoneWeightsData bone_weights_data = bone_weights_reader_.read(input.weights_file, profiler);
 
-        BonePoseData pose_data;
-        pose_data.inverse_bind_pose = pose_reader_.read_matrices(input.inverse_bind_pose_file, profiler, "read_inverse_bind_pose_json");
-        pose_data.new_pose = pose_reader_.read_matrices(input.new_pose_file, profiler, "read_new_pose_json");
+        BonePoseData bone_pose_data;
+        bone_pose_data.inverse_bind_pose =
+            bone_pose_reader_.read_matrices(input.inverse_bind_pose_file, profiler, "read_inverse_bind_pose_json");
+        bone_pose_data.new_pose = bone_pose_reader_.read_matrices(input.new_pose_file, profiler, "read_new_pose_json");
 
-        const Mesh skinned_mesh = skinner_.skin(mesh, skinning_data, pose_data, profiler);
+        const Mesh skinned_mesh = mesh_skinner_.skin(source_mesh, bone_weights_data, bone_pose_data, profiler);
         mesh_writer_.write(input.output_mesh_file, skinned_mesh, profiler);
 
         const auto total_end = std::chrono::steady_clock::now();

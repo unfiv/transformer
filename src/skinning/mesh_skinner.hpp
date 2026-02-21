@@ -9,7 +9,7 @@ namespace transformer
 class MeshSkinner
 {
 public:
-    Mesh skin(const Mesh& source_mesh, const SkinningData& skinning_data, const BonePoseData& pose_data,
+    Mesh skin(const Mesh& source_mesh, const BoneWeightsData& bone_weights_data, const BonePoseData& bone_pose_data,
               Profiler& profiler) const;
 };
 
