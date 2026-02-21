@@ -1,0 +1,5 @@
+mesh=input/test_mesh.obj
+weights=input/bone_weight.json
+inverse_bind_pose=input/inverse_bind_pose.json
+new_pose=input/new_pose.json
+expected_output=output/result_mesh.obj
