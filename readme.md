@@ -11,10 +11,29 @@
 - `src/core` — базовые типы, математика, профилировщик.
 
 ## Сборка
+Проект собирается через `CMakePresets.json`.
+
+### Linux/macOS (Ninja)
+```bash
+cmake --preset release
+cmake --build --preset build
+```
+
+Для других типов сборки:
+- Debug: `cmake --preset debug && cmake --build --preset build-debug`
+- RelWithDebInfo: `cmake --preset relwithdeb && cmake --build --preset build-relwithdeb`
+
+### Windows (новое устройство / MSVC + Ninja)
+```powershell
+cmake --preset windows-msvc-release
+cmake --build --preset build-win-release
+```
+
+Для отладки на Windows используйте `windows-msvc-debug` + `build-win-debug`.
 
 ## Запуск
 ```bash
-./build/transformer <meshFile.obj> <boneWeightFile.json> <inverseBindPoseFile.json> <newPoseFile.json> <resultFile.obj> <statsFile.json>
+./out/build/release/transformer <meshFile.obj> <boneWeightFile.json> <inverseBindPoseFile.json> <newPoseFile.json> <resultFile.obj> <statsFile.json>
 ```
 
 ## Формат `boneWeightFile.json`

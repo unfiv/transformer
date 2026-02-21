@@ -21,6 +21,9 @@ add_custom_target(stress
         -DCASE_DIR=${STRESS_CASE_DIR}
         -DCASE_NAME=${STRESS_CASE_NAME}
         -DTRANSFORMER_BIN=$<TARGET_FILE:transformer>
+        -DTRANSFORMER_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DTRANSFORMER_BUILD_CONFIG=$<CONFIG>
+        -DTRANSFORMER_VERSION=${PROJECT_VERSION}
         -DPARAMS_FILE=${STRESS_PARAMS_FILE}
         -DRUNS=${STRESS_RUNS}
         -P ${CMAKE_SOURCE_DIR}/tests/stress/run_stress.cmake
