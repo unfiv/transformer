@@ -227,6 +227,24 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(COMMAND git -C "${CMAKE_SOURCE_DIR}" describe --tags --always OUTPUT_VARIABLE _app_version OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 
+# Prefer explicit version from CMake target invocation; fallback to git describe value.
+set(_build_version "${TRANSFORMER_VERSION}")
+if(_build_version STREQUAL "")
+    set(_build_version "${_app_version}")
+endif()
+
+# Prefer per-build config for multi-config generators, then CMAKE_BUILD_TYPE.
+set(_effective_build_type "${TRANSFORMER_BUILD_CONFIG}")
+if(_effective_build_type STREQUAL "")
+    set(_effective_build_type "${TRANSFORMER_BUILD_TYPE}")
+endif()
+if(_effective_build_type STREQUAL "")
+    set(_effective_build_type "${CMAKE_BUILD_TYPE}")
+endif()
+if(_effective_build_type STREQUAL "")
+    set(_effective_build_type "unknown")
+endif()
+
 # Build sorted index list by insertion sort (stable)
 set(_sorted_indices)
 math(EXPR _n_minus1 "${_n} - 1")
@@ -504,7 +522,8 @@ file(WRITE "${AGGREGATE_FILE}"
     "    \"cmake_version\": \"${CMAKE_VERSION}\",\n"
     "    \"cxx_compiler\": \"${CMAKE_CXX_COMPILER}\",\n"
     "    \"cxx_id\": \"${CMAKE_CXX_COMPILER_ID}\",\n"
-    "    \"build_type\": \"${CMAKE_BUILD_TYPE}\"\n"
+    "    \"build_type\": \"${_effective_build_type}\",\n"
+    "    \"version\": \"${_build_version}\"\n"
     "  },\n"
     "  \"app_version\": \"${_app_version}\",\n"
 )
