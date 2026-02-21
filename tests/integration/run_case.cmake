@@ -97,5 +97,51 @@ execute_process(
 )
 
 if(NOT COMPARE_EXIT_CODE EQUAL 0)
-    message(FATAL_ERROR "Case '${CASE_NAME}' failed: output mesh differs from expected")
+    # Provide detailed diagnostics: which files differ and the first differing line (if text)
+    message(STATUS "Files differ: Expected='${EXPECTED_OUTPUT_FILE}' Actual='${ACTUAL_OUTPUT_FILE}'")
+
+    # Attempt to read both files as text and compare line-by-line to find the first differing line.
+    file(READ "${EXPECTED_OUTPUT_FILE}" _expected_raw)
+    file(READ "${ACTUAL_OUTPUT_FILE}" _actual_raw)
+
+    # Normalize line endings to LF
+    string(REPLACE "\r\n" "\n" _expected_raw "${_expected_raw}")
+    string(REPLACE "\r" "\n" _expected_raw "${_expected_raw}")
+    string(REPLACE "\r\n" "\n" _actual_raw "${_actual_raw}")
+    string(REPLACE "\r" "\n" _actual_raw "${_actual_raw}")
+
+    # Split into lists of lines
+    string(REPLACE "\n" ";" _expected_lines "${_expected_raw}")
+    string(REPLACE "\n" ";" _actual_lines "${_actual_raw}")
+
+    list(LENGTH _expected_lines _expected_count)
+    list(LENGTH _actual_lines _actual_count)
+
+    if(_expected_count LESS _actual_count)
+        set(_min_count ${_expected_count})
+    else()
+        set(_min_count ${_actual_count})
+    endif()
+
+    set(_first_diff_index -1)
+    if(_min_count GREATER 0)
+        math(EXPR _last_index "${_min_count} - 1")
+        foreach(_i RANGE 0 ${_last_index})
+            list(GET _expected_lines ${_i} _e_line)
+            list(GET _actual_lines ${_i} _a_line)
+            if(NOT _e_line STREQUAL _a_line)
+                set(_first_diff_index ${_i})
+                set(_first_expected_line "${_e_line}")
+                set(_first_actual_line "${_a_line}")
+                break()
+            endif()
+        endforeach()
+    endif()
+
+    if(_first_diff_index GREATER -1)
+        message(FATAL_ERROR "Case '${CASE_NAME}' failed: output mesh differs from expected\nExpected: ${EXPECTED_OUTPUT_FILE}\nActual:   ${ACTUAL_OUTPUT_FILE}\nFirst differing line (1-based): ${_first_diff_index}\nExpected line: '${_first_expected_line}'\nActual   line: '${_first_actual_line}'")
+    else()
+        # No differing line found within common range — probably different sizes or binary difference.
+        message(FATAL_ERROR "Case '${CASE_NAME}' failed: output mesh differs from expected\nExpected: ${EXPECTED_OUTPUT_FILE}\nActual:   ${ACTUAL_OUTPUT_FILE}\nExpected lines: ${_expected_count}\nActual lines:   ${_actual_count}")
+    endif()
 endif()
