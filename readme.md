@@ -1,8 +1,60 @@
+# Transformer (CPU Mesh Skinning)
+
+Консольное приложение для CPU skinning'а OBJ-меша на основе:
+- весов/индексов костей на вершину (до 4 влияний);
+- inverse bind pose матриц;
+- матриц новой позы.
 
 
+## Структура исходников
 
+- `src/app` — оркестрация сценария выполнения приложения.
+- `src/io` — парсинг входных данных и запись выходных файлов (OBJ/JSON/stats).
+- `src/skinning` — CPU skinning.
+- `src/core` — базовые типы, математика, профилировщик.
 
+## Сборка
 
+```bash
+cmake -S . -B build
+cmake --build build
+```
 
+## Запуск
 
+```bash
+./build/transformer <meshFile.obj> <boneWeightFile.json> <inverseBindPoseFile.json> <newPoseFile.json> <resultFile.obj> <statsFile.json>
+```
 
+## Формат `boneWeightFile.json`
+
+```json
+{
+  "vertices": [
+    {
+      "bone_indices": [0, 4, 9, 15],
+      "weights": [0.6, 0.2, 0.2, 0.0]
+    }
+  ]
+}
+```
+
+## Формат pose json (`inverseBindPoseFile.json` и `newPoseFile.json`)
+
+```json
+{
+  "bones": [
+    {
+      "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+    }
+  ]
+}
+```
+
+Матрица передаётся в **column-major** порядке.
+
+## Профилирование
+
+В `statsFile.json` записывается время в миллисекундах:
+- каждого модуля (чтение mesh/weights/poses, skinning, запись mesh);
+- суммарное время `total` (на верхнем уровне).
