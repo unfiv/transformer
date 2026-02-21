@@ -39,7 +39,7 @@ class IStatsWriter
 {
 public:
     virtual ~IStatsWriter() = default;
-    virtual void write(const std::string& output_file, const std::vector<TimingEntry>& timings) const = 0;
+    virtual void write(const std::string& output_file, const StatsReport& stats) const = 0;
 };
 
 } // namespace transformer

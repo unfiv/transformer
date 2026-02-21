@@ -3,6 +3,7 @@
 #include <chrono>
 #include <exception>
 #include <iostream>
+#include <vector>
 
 namespace transformer
 {
@@ -34,14 +35,36 @@ int SkinningApp::run(const AppInput& input) const
             bone_pose_reader_.read_matrices(input.inverse_bind_pose_file, profiler, "read_inverse_bind_pose_json");
         bone_pose_data.new_pose = bone_pose_reader_.read_matrices(input.new_pose_file, profiler, "read_new_pose_json");
 
-        const Mesh skinned_mesh = mesh_skinner_.skin(source_mesh, bone_weights_data, bone_pose_data, profiler);
+        std::vector<double> bench_runs_microseconds;
+        bench_runs_microseconds.reserve(input.bench_runs);
+
+        Mesh skinned_mesh;
+        for (std::size_t run_index = 0; run_index < input.bench_runs; ++run_index)
+        {
+            const auto skin_start = std::chrono::steady_clock::now();
+            skinned_mesh = mesh_skinner_.skin(source_mesh, bone_weights_data, bone_pose_data, profiler);
+            const auto skin_end = std::chrono::steady_clock::now();
+
+            if (input.bench_runs > 1)
+            {
+                const double run_us = std::chrono::duration<double, std::micro>(skin_end - skin_start).count();
+                bench_runs_microseconds.push_back(run_us);
+            }
+        }
+
         mesh_writer_.write(input.output_mesh_file, skinned_mesh, profiler);
 
         const auto total_end = std::chrono::steady_clock::now();
-        const auto total_ms = std::chrono::duration<double, std::milli>(total_end - total_start).count();
-        profiler.record("total", total_ms);
+        const auto total_us = std::chrono::duration<double, std::micro>(total_end - total_start).count();
+        profiler.record("total", total_us);
 
-        stats_writer_.write(input.stats_file, profiler.entries());
+        StatsReport report{ .stages = profiler.entries() };
+        if (input.bench_runs > 1)
+        {
+            report.bench_summary = compute_bench_summary(bench_runs_microseconds);
+        }
+
+        stats_writer_.write(input.stats_file, report);
 
         std::cout << "Success" << std::endl;
         return 0;
@@ -49,12 +72,13 @@ int SkinningApp::run(const AppInput& input) const
     catch (const std::exception& ex)
     {
         const auto total_end = std::chrono::steady_clock::now();
-        const auto total_ms = std::chrono::duration<double, std::milli>(total_end - total_start).count();
-        profiler.record("total", total_ms);
+        const auto total_us = std::chrono::duration<double, std::micro>(total_end - total_start).count();
+        profiler.record("total", total_us);
 
         try
         {
-            stats_writer_.write(input.stats_file, profiler.entries());
+            const StatsReport report{ .stages = profiler.entries() };
+            stats_writer_.write(input.stats_file, report);
         }
         catch (...)
         {

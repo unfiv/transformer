@@ -490,7 +490,7 @@ std::vector<Mat4> JsonBonePoseReader::read_matrices(const std::string& file_path
     return parse_bone_matrices(parsed_root);
 }
 
-void JsonStatsWriter::write(const std::string& output_file, const std::vector<TimingEntry>& timings) const
+void JsonStatsWriter::write(const std::string& output_file, const StatsReport& stats) const
 {
     std::ofstream output(output_file);
     if (!output)
@@ -498,17 +498,36 @@ void JsonStatsWriter::write(const std::string& output_file, const std::vector<Ti
         throw std::runtime_error("Failed to open stats output file: " + output_file);
     }
 
-    output << "{\n  \"stages\": [\n";
-    for (std::size_t i = 0; i < timings.size(); ++i)
+    output.setf(std::ios::fixed);
+    output.precision(3);
+
+    output << "{\n  \"unit\": \"microseconds\",\n  \"stages\": [\n";
+    for (std::size_t i = 0; i < stats.stages.size(); ++i)
     {
-        output << "    { \"stage\": \"" << timings[i].stage << "\", \"milliseconds\": " << timings[i].milliseconds << " }";
-        if (i + 1 < timings.size())
+        output << "    { \"stage\": \"" << stats.stages[i].stage << "\", \"microseconds\": "
+               << stats.stages[i].microseconds << " }";
+        if (i + 1 < stats.stages.size())
         {
             output << ',';
         }
         output << '\n';
     }
-    output << "  ]\n}\n";
+    output << "  ]";
+
+    if (stats.bench_summary.has_value())
+    {
+        const BenchSummary& bench = stats.bench_summary.value();
+        output << ",\n  \"bench\": {\n"
+               << "    \"runs\": " << bench.runs << ",\n"
+               << "    \"min_microseconds\": " << bench.min_microseconds << ",\n"
+               << "    \"max_microseconds\": " << bench.max_microseconds << ",\n"
+               << "    \"mean_microseconds\": " << bench.mean_microseconds << ",\n"
+               << "    \"median_microseconds\": " << bench.median_microseconds << ",\n"
+               << "    \"stddev_microseconds\": " << bench.stddev_microseconds << "\n"
+               << "  }";
+    }
+
+    output << "\n}\n";
 }
 
 } // namespace transformer

@@ -80,12 +80,12 @@ string(TIMESTAMP _start_epoch "%s")
 
 execute_process(
     COMMAND "${TRANSFORMER_BIN}"
-        "${MESH_FILE}"
-        "${WEIGHTS_FILE}"
-        "${INVERSE_BIND_POSE_FILE}"
-        "${NEW_POSE_FILE}"
-        "${ACTUAL_OUTPUT_FILE}"
-        "${STATS_FILE}"
+        --mesh "${MESH_FILE}"
+        --bones-weights "${WEIGHTS_FILE}"
+        --inverse-bind-pose "${INVERSE_BIND_POSE_FILE}"
+        --new-pose "${NEW_POSE_FILE}"
+        --output "${ACTUAL_OUTPUT_FILE}"
+        --stats "${STATS_FILE}"
     RESULT_VARIABLE APP_EXIT_CODE
 )
 
