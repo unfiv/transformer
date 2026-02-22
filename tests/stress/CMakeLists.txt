@@ -24,8 +24,14 @@ add_custom_target(stress
         -DTRANSFORMER_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DTRANSFORMER_BUILD_CONFIG=$<CONFIG>
         -DTRANSFORMER_VERSION=${PROJECT_VERSION}
+        -DSTRESS_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+        -DSTRESS_HOST_ARCH=${CMAKE_HOST_SYSTEM_PROCESSOR}
+        -DSTRESS_CMAKE_VERSION=${CMAKE_VERSION}
+        -DSTRESS_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DSTRESS_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
         -DPARAMS_FILE=${STRESS_PARAMS_FILE}
         -DRUNS=${STRESS_RUNS}
+        -DOUTPUT_ROOT_DIR=${CMAKE_BINARY_DIR}/tests/stress
         -P ${CMAKE_SOURCE_DIR}/tests/stress/run_stress.cmake
     DEPENDS transformer
     COMMENT "Run stress test (single transformer run with --bench and aggregated stats)"
