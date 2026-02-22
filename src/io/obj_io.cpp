@@ -11,13 +11,13 @@ namespace transformer
 namespace
 {
 
-std::int32_t parse_face_index(const std::string& token)
+std::int16_t parse_face_index(const std::string& token)
 {
     // Supports forms: v, v/t, v//n, v/t/n
     const std::size_t slash_pos = token.find('/');
     const std::string vertex_str = (slash_pos == std::string::npos) ? token : token.substr(0, slash_pos);
     const int index_1_based = std::stoi(vertex_str);
-    return static_cast<std::int32_t>(index_1_based - 1);
+    return static_cast<std::int16_t>(index_1_based - 1);
 }
 
 } // namespace

@@ -321,14 +321,14 @@ const JsonValue* find_key(const JsonObject& object, std::initializer_list<const 
     return nullptr;
 }
 
-std::array<std::int32_t, 4> parse_bone_indices(const JsonValue& value)
+std::array<std::int8_t, 4> parse_bone_indices(const JsonValue& value)
 {
-    std::array<std::int32_t, 4> indices{ -1, -1, -1, -1 };
+    std::array<std::int8_t, 4> indices{ -1, -1, -1, -1 };
     const JsonArray& index_values = as_array(value, "Weights JSON parse error: bone indices must be an array");
 
     for (std::size_t i = 0; i < index_values.size() && i < indices.size(); ++i)
     {
-        indices[i] = static_cast<std::int32_t>(as_number(index_values[i], "Weights JSON parse error: bone index must be numeric"));
+        indices[i] = static_cast<std::int8_t>(as_number(index_values[i], "Weights JSON parse error: bone index must be numeric"));
     }
 
     return indices;
@@ -381,7 +381,7 @@ VertexBoneWeights parse_vertex_weights(const JsonValue& value)
         }
 
         vertex_bone_weights.bone_indices[i] =
-            static_cast<std::int32_t>(as_number(*influence_index, "Weights JSON parse error: influence index must be numeric"));
+            static_cast<std::int8_t>(as_number(*influence_index, "Weights JSON parse error: influence index must be numeric"));
         vertex_bone_weights.weights[i] =
             static_cast<float>(as_number(*influence_weight, "Weights JSON parse error: influence weight must be numeric"));
     }

@@ -35,17 +35,12 @@ Mesh MeshSkinner::skin(const Mesh& source_mesh, const BoneWeightsData& bone_weig
 
         for (std::size_t i = 0; i < 4; ++i)
         {
-            const std::int32_t bone_index = vertex_bone_weights.bone_indices[i];
+            const std::int8_t bone_index = vertex_bone_weights.bone_indices[i];
             const float weight = vertex_bone_weights.weights[i];
 
             if (bone_index < 0 || weight <= 0.0F)
             {
                 continue;
-            }
-
-            if (static_cast<std::size_t>(bone_index) >= bone_pose_data.new_pose.size())
-            {
-                throw std::runtime_error("Bone index out of range in skinning data");
             }
 
             const Mat4 skinning_matrix =

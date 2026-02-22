@@ -32,16 +32,14 @@ struct Mat4
 
 struct VertexBoneWeights
 {
-    std::array<std::int32_t, 4> bone_indices{ -1, -1, -1, -1 };
+    std::array<std::int8_t, 4> bone_indices{ -1, -1, -1, -1 };
     std::array<float, 4> weights{ 0.0F, 0.0F, 0.0F, 0.0F };
 };
 
 struct Mesh
 {
     std::vector<Vec3> positions;
-    std::vector<Vec3> normals;
-    std::vector<Vec3> texcoords;
-    std::vector<std::int32_t> indices;
+    std::vector<std::int16_t> indices;
 };
 
 struct BoneWeightsData
