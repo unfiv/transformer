@@ -25,43 +25,65 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
         const Vec3& source_position = source_entry.vertex;
         const VertexBoneWeights& vertex_bone_weights = source_entry.bone_weights;
 
-        Vec4 blended_position{ 0.0F, 0.0F, 0.0F, 0.0F };
-        const Vec4 source_position_h{ source_position.x, source_position.y, source_position.z, 1.0F };
-        float accumulated_weight = 0.0F;
+        // Instead of Vec4 we can use 3 separate floats as we ignore w bevause of being sure sum of weights is 1
+        float blended_position_x = 0.0F;
+        float blended_position_y = 0.0F;
+        float blended_position_z = 0.0F;
 
+        // As soon as we sure weights' sum is always 1 we better skip branching 
+        // and run over all 4 bones to make zero vector to add to blended one
         for (std::size_t i = 0; i < 4; ++i)
         {
             const std::int8_t bone_index = vertex_bone_weights.bone_indices[i];
             const float weight = vertex_bone_weights.weights[i];
 
-            if (bone_index < 0 || weight <= 0.0F)
-            {
-                continue;
-            }
 
             const Mat4 skinning_matrix = precomputed_skinning_matrixes[bone_index];
             const Vec4 transformed_position = multiply(skinning_matrix, source_position_h);
+            // We remove this branching because of being sure our weights' sum is always 1
+            //if (bone_index < 0 || weight <= 0.0F)
+            //{
+            //    continue;
+            //}
+            // We can ignore full 4 dimension multiplication now
+            //const Vec4 transformed_position = multiply(skinning_matrix, source_position_h);
+            //blended_position.x += transformed_position.x * weight;
+            //blended_position.y += transformed_position.y * weight;
+            //blended_position.z += transformed_position.z * weight;
+            //blended_position.w += transformed_position.w * weight;
 
-            blended_position.x += transformed_position.x * weight;
-            blended_position.y += transformed_position.y * weight;
-            blended_position.z += transformed_position.z * weight;
-            blended_position.w += transformed_position.w * weight;
-            accumulated_weight += weight;
+            // In favor of lightier option without W
+            const float tx = sm.m[0] * sp.x + sm.m[4] * sp.y + sm.m[8] * sp.z  + sm.m[12];
+            const float ty = sm.m[1] * sp.x + sm.m[5] * sp.y + sm.m[9] * sp.z  + sm.m[13];
+            const float tz = sm.m[2] * sp.x + sm.m[6] * sp.y + sm.m[10] * sp.z + sm.m[14];
+
+            blended_position_x += tx * weight;
+            blended_position_y += ty * weight;
+            blended_position_z += tz * weight;
+
+            // no more accumulated weight
+            //accumulated_weight += weight;
         }
 
-        if (accumulated_weight <= 0.0F)
-        {
-            result_mesh.entries[vertex_index].vertex = source_position;
-            continue;
-        }
+        // No more accumulated weight
+        //if (accumulated_weight <= 0.0F)
+        //{
+        //    result_mesh.entries[vertex_index].vertex = source_position;
+        //    continue;
+        //}
 
-        const float normalization_scale = 1.0F / accumulated_weight;
-        blended_position.x *= normalization_scale;
-        blended_position.y *= normalization_scale;
-        blended_position.z *= normalization_scale;
-        blended_position.w *= normalization_scale;
+        // Even no more normalization because of this weights' sum 1
+        //const float normalization_scale = 1.0F / accumulated_weight;
+        //blended_position.x *= normalization_scale;
+        //blended_position.y *= normalization_scale;
+        //blended_position.z *= normalization_scale;
+        //blended_position.w *= normalization_scale;
 
-        result_mesh.entries[vertex_index].vertex = divide_by_w(blended_position);
+        // Instead just a simple adding (assume some of the positions can be zero because of zero weights, but it doesn't matter for us)
+
+        // Remove the division operation as well
+        //result_mesh.entries[vertex_index].vertex = divide_by_w(blended_position);
+        result_mesh.entries[vertex_index].vertex = {blended_position_x, blended_position_y, blended_position_z};
     }
 }
 

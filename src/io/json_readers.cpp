@@ -10,6 +10,9 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <numeric>
+#include <cassert>
+#include <cmath>
 
 namespace transformer
 {
@@ -386,6 +389,13 @@ VertexBoneWeights parse_vertex_weights(const JsonValue& value)
         vertex_bone_weights.weights[i] =
             static_cast<float>(as_number(*influence_weight, "Weights JSON parse error: influence weight must be numeric"));
     }
+
+    // 2. Validate normalization to ensure the hot loop doesn't need to divide by sum.
+    // We use std::accumulate to sum all weights (including zeroed-out unused slots).
+    const float weights_sum = std::accumulate(vertex_bone_weights.weights.begin(), vertex_bone_weights.weights.end(), 0.0F);
+    
+    // Floating point epsilon check (0.001 is standard for skinning data validation).
+    assert(std::abs(weights_sum - 1.0F) < 0.001F && "Weights sum must be 1.0 for branchless optimization!");
 
     return vertex_bone_weights;
 }
