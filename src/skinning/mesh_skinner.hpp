@@ -1,10 +1,11 @@
 #pragma once
 
-#include "core/profiler.hpp"
-#include "core/types.hpp"
+#include "core/math_types.hpp"
 
 namespace transformer
 {
+
+class Profiler;
 
 class MeshSkinner
 {

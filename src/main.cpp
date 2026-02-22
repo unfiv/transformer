@@ -1,5 +1,5 @@
 #include "app/app.hpp"
-#include "core/types.hpp"
+#include "core/app_input.hpp"
 #include "io/json_readers.hpp"
 #include "io/obj_io.hpp"
 #include "skinning/mesh_skinner.hpp"

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/types.hpp"
+#include "core/app_input.hpp"
+#include "core/math_types.hpp"
 #include "io/io_interfaces.hpp"
 #include "skinning/mesh_skinner.hpp"
 
