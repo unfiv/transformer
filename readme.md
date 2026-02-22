@@ -1,17 +1,17 @@
 # Transformer (CPU Mesh Skinning)
-Консольное приложение для CPU skinning'а OBJ-меша на основе:
-- весов/индексов костей на вершину (до 4 влияний);
-- inverse bind pose матриц;
-- матриц новой позы.
+A console app for CPU skinning of an OBJ mesh based on:
+- bone indices and weights per vertex (up to 4 influences);
+- inverse bind pose matrices;
+- new pose matrices.
 
-## Структура исходников
-- `src/app` — оркестрация сценария выполнения приложения.
-- `src/io` — парсинг входных данных и запись выходных файлов (OBJ/JSON/stats).
+## Source structure
+- `src/app` — app flow orchestration.
+- `src/io` — input parsing and output writing (OBJ/JSON/stats).
 - `src/skinning` — CPU skinning.
-- `src/core` — базовые типы, математика, профилировщик.
+- `src/core` — basic types, math, profiler.
 
-## Сборка
-Проект собирается через `CMakePresets.json`.
+## Build
+The project uses `CMakePresets.json`.
 
 ### Linux/macOS (Ninja)
 ```bash
@@ -19,29 +19,29 @@ cmake --preset release
 cmake --build --preset build
 ```
 
-Для других типов сборки:
+For other build types:
 - Debug: `cmake --preset debug && cmake --build --preset build-debug`
 - RelWithDebInfo: `cmake --preset relwithdeb && cmake --build --preset build-relwithdeb`
 
-### Windows (новое устройство / MSVC + Ninja)
+### Windows (new machine / MSVC + Ninja)
 ```powershell
 cmake --preset windows-msvc-release
 cmake --build --preset build-win-release
 ```
 
-Для отладки на Windows используйте `windows-msvc-debug` + `build-win-debug`.
+For debugging on Windows, use `windows-msvc-debug` + `build-win-debug`.
 
-## Запуск
+## Run
 ```bash
 ./out/build/release/transformer --mesh <meshFile.obj> --bones-weights <boneWeightFile.json> --inverse-bind-pose <inverseBindPoseFile.json> --new-pose <newPoseFile.json> --output <resultFile.obj> --stats <statsFile.json> [--bench <N>]
 ```
 
-Типовой рабочий запуск:
+Typical run:
 ```bash
 --mesh "assets/test_mesh.obj" --bones-weights "assets/bone_weight.json" --inverse-bind-pose "assets/inverse_bind_pose.json" --new-pose "assets/new_pose.json" --output "result_mesh.obj" --stats stats.json
 ```
 
-## Формат `boneWeightFile.json`
+## `boneWeightFile.json` format
 ```json
 {
   "vertices": [
@@ -53,7 +53,7 @@ cmake --build --preset build-win-release
 }
 ```
 
-## Формат pose json (`inverseBindPoseFile.json` и `newPoseFile.json`)
+## Pose JSON format (`inverseBindPoseFile.json` and `newPoseFile.json`)
 ```json
 {
   "bones": [
@@ -63,41 +63,44 @@ cmake --build --preset build-win-release
   ]
 }
 ```
-Матрица передаётся в **column-major** порядке.
+The matrix is in **column-major** order.
 
-## Профилирование
-В `statsFile.json` записывается время в микросекундах (с точностью до 3 знаков после запятой):
-- каждого модуля (чтение mesh/weights/poses, skinning, запись mesh);
-- суммарное время `total` (на верхнем уровне).
+## Profiling
+`statsFile.json` stores time in microseconds (with 3 decimal places) for:
+- each module (mesh/weights/poses read, skinning, mesh write);
+- total time `total` (top-level).
 
-Если передан `--bench <N>`, операция `cpu_skinning` выполняется `N` раз, а в `statsFile.json` дополнительно пишется сводка: `min/max/mean/median/stddev` по этим `N` прогонам.
+If `--bench <N>` is provided, `cpu_skinning` is executed `N` times. In this case, `statsFile.json` also contains: `min/max/mean/median/stddev` for those `N` runs.
 
-# Окружение
-Проект использует CMake/CMakePresets/clang-format, чтобы сохранять единый стиль кодирования, а также обеспечивать единообразность и простоту сборки/запуска на разных платформах. Также обеспечивается консистентность тулчейна, чтобы избежать проблем с различными версиями компилятора, линкера и т.д.
+# Environment
+The project uses CMake/CMakePresets/clang-format to keep code style consistent and make build/run steps simple across platforms. It also helps keep the toolchain consistent to avoid issues between compiler/linker versions.
 
-# Стресс-тестирование
-Организован отдельный стенд для запуска тестов: cmake target `stress`.
-Теперь это **один** запуск утилиты с параметром `--bench 100` (число настраивается через `STRESS_RUNS`), без внешнего цикла в CMake.
+# Stress testing
+A separate test setup is available: CMake target `stress`.
+Now it is **one** utility run with `--bench 100` (the number is controlled by `STRESS_RUNS`), without an external CMake loop.
 
-Агрегированная статистика берётся из `statsFile.json` приложения и включает:
-- `mean`, `median`, `stddev`, `min`, `max` (в микросекундах) для `cpu_skinning` по `N` прогонам.
+Aggregated stats come from the app `statsFile.json` and include:
+- `mean`, `median`, `stddev`, `min`, `max` (in microseconds) for `cpu_skinning` over `N` runs.
 
-## Ошибки CLI
-- При неизвестном аргументе, пропущенном значении флага или отсутствии обязательных флагов приложение завершится с кодом `1` и выведет usage.
-- `--bench` принимает только положительное целое число.
+## CLI errors
+- For unknown arguments, missing flag values, or missing required flags, the app exits with code `1` and prints usage.
+- `--bench` accepts only a positive integer.
 
-# Оптимизация
-Особенности текущего тестового стенда, которые следует учитывать при анализе результатов оптимизации:
-- Низкополигональный меш и малое количество костей: имеем небольшой набор данных, которые могут очень хорошо помещаться в кеш практически любой архитектуры (в частности нижнего уровня). На реальных моделях данных и операций работы с кешем будет гораздо больше. Рекомендуется тестировать на нескольих типах моделей.
-- Тестирование и результаты приводятся для определённого железа, чтобы оценить алгоритмы требуется большая выборка стендов.
-- Работа ведётся с одной моделью, что опять же делает алгоритмы более кеш-дружественными. В реальных играх чаще всего анимируется множество объектов, в связи с чем чаще необходимо переключать кеш-контекст.
-- Мы игнорируем небольшую погрешность, возникающую при парсинге дробных значений.
-- Оптимизацию по многопоточности и SIMD мы делаем не кросс-платформенной исключительно для упрощения.
-- На финальной стадии после интеграции SIMD была попытка перевести вычисления в многопоточную среду, однако результаты стали хуже. Это связано с тем, что накладные расходы на многопоточноть перекрыли профит. При большем количестве данных ситуация могла бы быть иной.
+# Optimization
+Current test setup specifics to keep in mind when reading optimization results:
+- Low-poly mesh and a small number of bones: the dataset is small and can fit cache on many CPUs. Real models usually have much larger datasets and cache behavior can differ a lot. It is better to test several model types.
+- Tests and results are for specific hardware. To evaluate algorithms well, you need a wider hardware sample.
+- Work is done with one model, which is cache-friendly. In real games many objects are animated, so cache context switches are more frequent.
+- We ignore small precision errors from parsing floating-point values.
+- Threading and SIMD optimizations are not made cross-platform on purpose, to keep things simple.
+- At the final stage, after SIMD integration, there was an attempt to move computation to multithreading, but results became worse. Overhead was higher than the gain. With bigger datasets it could be different.
 
-Ниже представлены итерации оптимизации и результаты стресс-тестирования:
-- 1.0 Базовая версия с честными последовательными вычислениями:
-"bench": {
+Optimization iterations and stress test results:
+- 1.0 Base version with straightforward sequential computation:
+
+```json
+{
+  "bench": {
     "runs": 10000,
     "min_microseconds": 78.700,
     "max_microseconds": 413.900,
@@ -105,8 +108,14 @@ cmake --build --preset build-win-release
     "median_microseconds": 138.500,
     "stddev_microseconds": 14.750
   }
-- 1.1 Версия с оптимизированными лэйаутами данных (объединили всё, что можно было для горячего цикла, переход SOA -> AOS), тем не менее результат остался практически таким же, но в теории на других архитектурах может быть буст:
-"bench": {
+}
+```
+
+- 1.1 Version with optimized data layouts (combined data for the hot loop, SOA -> AOS). Result stayed almost the same, but it may help on other architectures:
+
+```json
+{
+  "bench": {
     "runs": 10000,
     "min_microseconds": 135.100,
     "max_microseconds": 294.400,
@@ -114,8 +123,14 @@ cmake --build --preset build-win-release
     "median_microseconds": 135.700,
     "stddev_microseconds": 7.487
   }
-- 1.2 Версия с прекомпилированной матрицей для скиннинга, мы сократили количество перемножений с 4400 до 33 (количество костей), убрали избыточные операции. Одновременно должны были "раскрыться" предыдущие оптимизации по лэйауту:  
-"bench": {
+}
+```
+
+- 1.2 Version with precomputed skinning matrices. Matrix multiplications were reduced from 4400 to 33 (number of bones), and extra operations were removed. Previous layout optimizations should also become more useful:
+
+```json
+{
+  "bench": {
     "runs": 10000,
     "min_microseconds": 47.400,
     "max_microseconds": 637.400,
@@ -123,8 +138,14 @@ cmake --build --preset build-win-release
     "median_microseconds": 47.800,
     "stddev_microseconds": 12.631
   }
-- 1.3 Мы убедились на этапе загрузки, что сумма весов костей всегда 1, и на основании этой информации убрали лишние операции (не работаем с компонентой W, избегаем нормализации и деления координат). Второй важный момент, что в "горячем цикле" мы убираем бранчинг: подготавливаем данные так, что каждая вершина всегда имеет все 4 кости для веса, и в скиннинге всегда работаем со всеми четырьмя матрицами (когда работаем с "фейковыми", то там нули). Процессору проще "перемолоть" последовательно пустые данные, чем делать проверки, ветвления и сбрасывать контейнер инструкций из-за неудачных предсказаний переходов:
-"bench": {
+}
+```
+
+- 1.3 During loading, we verified bone weights always sum to 1. Based on this, extra work was removed (no W component work, no normalization or coordinate division). Another key point: no branching in the hot loop. Data is prepared so every vertex always has all 4 bone slots, and skinning always processes all four matrices (fake ones are zeros). It is often easier for CPU to process zero data in sequence than to branch and pay branch misprediction costs:
+
+```json
+{
+  "bench": {
     "runs": 10000,
     "min_microseconds": 27.100,
     "max_microseconds": 113.400,
@@ -132,8 +153,14 @@ cmake --build --preset build-win-release
     "median_microseconds": 27.700,
     "stddev_microseconds": 4.475
   }
-- 1.4 Мы применили технику Single Instruction Multiple Data во время перемножения координат вектора на предвычисленную скиннинг матрицу, на предыдущем этапе мы уже разложили последовательность операций (покомпонентное умножение и сложнение) логически, а здесь мы лишь технически делаем их за одну инструкцию с помощью специального регистра:
-"bench": {
+}
+```
+
+- 1.4 SIMD was used for vector-coordinate multiplication by precomputed skinning matrices. At previous stage, operations were already decomposed component-wise; here they are executed with SIMD instructions using vector registers:
+
+```json
+{
+  "bench": {
     "runs": 10000,
     "min_microseconds": 13.800,
     "max_microseconds": 493.100,
@@ -141,3 +168,5 @@ cmake --build --preset build-win-release
     "median_microseconds": 14.200,
     "stddev_microseconds": 8.457
   }
+}
+```
