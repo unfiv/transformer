@@ -51,7 +51,7 @@ Mesh ObjMeshReader::read(const std::string& mesh_file, Profiler& profiler) const
         {
             Vec3 pos{};
             iss >> pos.x >> pos.y >> pos.z;
-            mesh.entries.push_back({ .vertex = pos, .index = -1 });
+            mesh.entries.push_back({ .vertex = pos });
             ++mesh.vertex_count;
         }
         else if (prefix == "f")
@@ -65,9 +65,9 @@ Mesh ObjMeshReader::read(const std::string& mesh_file, Profiler& profiler) const
                 throw std::runtime_error("Only triangulated OBJ faces are supported");
             }
 
-            mesh.entries.push_back({ .vertex = {}, .index = parse_face_index(t0) });
-            mesh.entries.push_back({ .vertex = {}, .index = parse_face_index(t1) });
-            mesh.entries.push_back({ .vertex = {}, .index = parse_face_index(t2) });
+            mesh.indices.push_back(parse_face_index(t0));
+            mesh.indices.push_back(parse_face_index(t1));
+            mesh.indices.push_back(parse_face_index(t2));
         }
     }
 
@@ -92,10 +92,10 @@ void ObjMeshWriter::write(const std::string& output_file, const Mesh& mesh, Prof
         output << "v " << pos.x << ' ' << pos.y << ' ' << pos.z << '\n';
     }
 
-    for (std::size_t i = mesh.vertex_count; i + 2 < mesh.entries.size(); i += 3)
+    for (std::size_t i = 0; i + 2 < mesh.indices.size(); i += 3)
     {
-        output << "f " << mesh.entries[i].index + 1 << ' ' << mesh.entries[i + 1].index + 1 << ' '
-               << mesh.entries[i + 2].index + 1 << '\n';
+        output << "f " << mesh.indices[i] + 1 << ' ' << mesh.indices[i + 1] + 1 << ' ' << mesh.indices[i + 2] + 1
+               << '\n';
     }
 }
 
