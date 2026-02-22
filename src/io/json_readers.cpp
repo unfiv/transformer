@@ -356,38 +356,49 @@ VertexBoneWeights parse_vertex_weights(const JsonValue& value)
     const JsonObject& vertex_object = as_object(value, "Weights JSON parse error: each vertex must be an object");
     VertexBoneWeights vertex_bone_weights;
 
+    // 1. Pre-initialize with safe defaults for branchless skinning.
+    // Index 255 (from -1) will point to a zero matrix in our 256-matrix array.
+    // Weights must be zeroed to ensure unused slots don't affect the result.
+    vertex_bone_weights.bone_indices.fill(-1);
+    vertex_bone_weights.weights.fill(0.0F);
+
     const JsonValue* indices_value = find_key(vertex_object, { "bone_indices", "boneIndices", "indices", "joints", "index" });
     const JsonValue* weights_value = find_key(vertex_object, { "weights", "bone_weights", "boneWeights", "weight" });
 
+    // Path A: Data is provided as separate arrays of indices and weights
     if (indices_value != nullptr && weights_value != nullptr)
     {
         vertex_bone_weights.bone_indices = parse_bone_indices(*indices_value);
         vertex_bone_weights.weights = parse_weights(*weights_value);
-        return vertex_bone_weights;
     }
-
-    const JsonValue* influences_value = find_key(vertex_object, { "influences", "bones", "bone_influences" });
-    if (influences_value == nullptr)
+    // Path B: Data is provided as an array of influence objects (bone_index + weight)
+    else
     {
-        throw std::runtime_error("Weights JSON parse error: vertex must contain either indices/weights or influences array");
-    }
-
-    const JsonArray& influences = as_array(*influences_value, "Weights JSON parse error: influences must be an array");
-    for (std::size_t i = 0; i < influences.size() && i < 4; ++i)
-    {
-        const JsonObject& influence_object = as_object(influences[i], "Weights JSON parse error: influence must be an object");
-        const JsonValue* influence_index = find_key(influence_object, { "bone_index", "boneIndex", "index", "joint" });
-        const JsonValue* influence_weight = find_key(influence_object, { "weight", "value" });
-
-        if (influence_index == nullptr || influence_weight == nullptr)
+        const JsonValue* influences_value = find_key(vertex_object, { "influences", "bones", "bone_influences" });
+        if (influences_value == nullptr)
         {
-            throw std::runtime_error("Weights JSON parse error: influence must contain bone index and weight");
+            throw std::runtime_error("Weights JSON parse error: vertex must contain either indices/weights or influences array");
         }
 
-        vertex_bone_weights.bone_indices[i] =
-            static_cast<std::int8_t>(as_number(*influence_index, "Weights JSON parse error: influence index must be numeric"));
-        vertex_bone_weights.weights[i] =
-            static_cast<float>(as_number(*influence_weight, "Weights JSON parse error: influence weight must be numeric"));
+        const JsonArray& influences = as_array(*influences_value, "Weights JSON parse error: influences must be an array");
+        
+        // Fill up to 4 influence slots as defined in our VertexBoneWeights structure
+        for (std::size_t i = 0; i < influences.size() && i < 4; ++i)
+        {
+            const JsonObject& influence_object = as_object(influences[i], "Weights JSON parse error: influence must be an object");
+            const JsonValue* influence_index = find_key(influence_object, { "bone_index", "boneIndex", "index", "joint" });
+            const JsonValue* influence_weight = find_key(influence_object, { "weight", "value" });
+
+            if (influence_index == nullptr || influence_weight == nullptr)
+            {
+                throw std::runtime_error("Weights JSON parse error: influence must contain bone index and weight");
+            }
+
+            vertex_bone_weights.bone_indices[i] =
+                static_cast<std::int8_t>(as_number(*influence_index, "Weights JSON parse error: influence index must be numeric"));
+            vertex_bone_weights.weights[i] =
+                static_cast<float>(as_number(*influence_weight, "Weights JSON parse error: influence weight must be numeric"));
+        }
     }
 
     // 2. Validate normalization to ensure the hot loop doesn't need to divide by sum.

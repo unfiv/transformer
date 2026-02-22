@@ -10,19 +10,18 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
 {
     const auto scope = profiler.stage("cpu_skinning");
 
-
-    // Precompute skinning matrices for each bone to avoid redundant multiplications
-    auto precomputed_skinning_matrixes = std::vector<Mat4>();
-    precomputed_skinning_matrixes.reserve(bone_pose_data.bone_poses.size());
+    // 1. Precompute skinning matrices for each bone to avoid redundant multiplications
+    // 2. Another trick is is to use last matrix as empty one (255) with identity values to avoid branching
+    std::array<Mat4, 256> precomputed_skinning_matrixes{};
     for (std::size_t bone_index = 0; bone_index < bone_pose_data.bone_poses.size(); ++bone_index)
     {
-        precomputed_skinning_matrixes.push_back(multiply(bone_pose_data.bone_poses[bone_index][1], bone_pose_data.bone_poses[bone_index][0]));
+        precomputed_skinning_matrixes[bone_index] = multiply(bone_pose_data.bone_poses[bone_index][1], bone_pose_data.bone_poses[bone_index][0]);
     }
 
     for (std::size_t vertex_index = 0; vertex_index < source_mesh.vertex_count; ++vertex_index)
     {
         const Mesh::Entry& source_entry = source_mesh.entries[vertex_index];
-        const Vec3& source_position = source_entry.vertex;
+        const Vec3& sp = source_entry.vertex;
         const VertexBoneWeights& vertex_bone_weights = source_entry.bone_weights;
 
         // Instead of Vec4 we can use 3 separate floats as we ignore w bevause of being sure sum of weights is 1
@@ -34,17 +33,19 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
         // and run over all 4 bones to make zero vector to add to blended one
         for (std::size_t i = 0; i < 4; ++i)
         {
-            const std::int8_t bone_index = vertex_bone_weights.bone_indices[i];
+            // We prepared data to be -1 in case of unused bone slot, so we can just cast it to uint8_t to get 255 index for zero matrix
+            const auto safe_bone_index = static_cast<std::uint8_t>(vertex_bone_weights.bone_indices[i]);
             const float weight = vertex_bone_weights.weights[i];
 
-
-            const Mat4 skinning_matrix = precomputed_skinning_matrixes[bone_index];
-            const Vec4 transformed_position = multiply(skinning_matrix, source_position_h);
             // We remove this branching because of being sure our weights' sum is always 1
             //if (bone_index < 0 || weight <= 0.0F)
             //{
             //    continue;
             //}
+
+            // We can ignore full Ve4
+            const Mat4& sm = precomputed_skinning_matrixes[safe_bone_index];
+
             // We can ignore full 4 dimension multiplication now
             //const Vec4 transformed_position = multiply(skinning_matrix, source_position_h);
             //blended_position.x += transformed_position.x * weight;
