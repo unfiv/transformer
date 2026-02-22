@@ -3,6 +3,9 @@
 #include "core/math_utils.hpp"
 #include "core/profiler.hpp"
 
+// Non cross-platform
+#include <immintrin.h> // SIMD
+
 namespace transformer
 {
 
@@ -24,6 +27,9 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
         const Mesh::Entry& source_entry = source_mesh.entries[vertex_index];
         const Vec3& sp = source_entry.vertex;
         const VertexBoneWeights& vertex_bone_weights = source_entry.bone_weights;
+
+        // SIMD: Accumulator for weighted positions: [X, Y, Z, 0.0]
+        __m128 v_acc = _mm_setzero_ps();
 
         // Instead of Vec4 we can use 3 separate floats as we ignore w bevause of being sure sum of weights is 1
         float blended_position_x = 0.0F;
@@ -55,13 +61,37 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
             //blended_position.w += transformed_position.w * weight;
 
             // In favor of lightier option without W
-            const float tx = sm.m[0] * sp.x + sm.m[4] * sp.y + sm.m[8] * sp.z  + sm.m[12];
-            const float ty = sm.m[1] * sp.x + sm.m[5] * sp.y + sm.m[9] * sp.z  + sm.m[13];
-            const float tz = sm.m[2] * sp.x + sm.m[6] * sp.y + sm.m[10] * sp.z + sm.m[14];
+            // And we remove this block in favor of SIMD
+            //const float tx = sm.m[0] * sp.x + sm.m[4] * sp.y + sm.m[8] * sp.z  + sm.m[12];
+            //const float ty = sm.m[1] * sp.x + sm.m[5] * sp.y + sm.m[9] * sp.z  + sm.m[13];
+            //const float tz = sm.m[2] * sp.x + sm.m[6] * sp.y + sm.m[10] * sp.z + sm.m[14];
+            //blended_position_x += tx * weight;
+            //blended_position_y += ty * weight;
+            //blended_position_z += tz * weight;
 
-            blended_position_x += tx * weight;
-            blended_position_y += ty * weight;
-            blended_position_z += tz * weight;
+            // SIMD:
+            // Load columns of the matrix
+            // Columns represent the transformed basis vectors and translation
+            __m128 col0 = _mm_loadu_ps(&sm.m[0]);  // Basis X
+            __m128 col1 = _mm_loadu_ps(&sm.m[4]);  // Basis Y
+            __m128 col2 = _mm_loadu_ps(&sm.m[8]);  // Basis Z
+            __m128 col3 = _mm_loadu_ps(&sm.m[12]); // Translation
+
+            // Replicate (splat) coordinates to all 4 SIMD lanes
+            __m128 xxxx = _mm_set1_ps(sp.x);
+            __m128 yyyy = _mm_set1_ps(sp.y);
+            __m128 zzzz = _mm_set1_ps(sp.z);
+
+            // Matrix * Vector (Point) multiplication:
+            // Result = Col0*X + Col1*Y + Col2*Z + Col3 (since W=1.0)
+            __m128 res = _mm_mul_ps(col0, xxxx);
+            res = _mm_add_ps(res, _mm_mul_ps(col1, yyyy));
+            res = _mm_add_ps(res, _mm_mul_ps(col2, zzzz));
+            res = _mm_add_ps(res, col3);
+
+            // Multiply the result by bone weight and add to accumulator
+            __m128 v_weight = _mm_set1_ps(weight);
+            v_acc = _mm_add_ps(v_acc, _mm_mul_ps(res, v_weight));
 
             // no more accumulated weight
             //accumulated_weight += weight;
@@ -85,7 +115,14 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
 
         // Remove the division operation as well
         //result_mesh.entries[vertex_index].vertex = divide_by_w(blended_position);
-        result_mesh.entries[vertex_index].vertex = {blended_position_x, blended_position_y, blended_position_z};
+        // And again remove this code in favor of SIMD result
+        //result_mesh.entries[vertex_index].vertex = {blended_position_x, blended_position_y, blended_position_z};
+
+        // SIMD
+        // Write back to mesh (extracting X, Y, Z)
+        alignas(16) float final_pos[4];
+        _mm_store_ps(final_pos, v_acc);
+        result_mesh.entries[vertex_index].vertex = { final_pos[0], final_pos[1], final_pos[2] };
     }
 }
 
