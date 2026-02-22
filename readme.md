@@ -36,6 +36,11 @@ cmake --build --preset build-win-release
 ./out/build/release/transformer --mesh <meshFile.obj> --bones-weights <boneWeightFile.json> --inverse-bind-pose <inverseBindPoseFile.json> --new-pose <newPoseFile.json> --output <resultFile.obj> --stats <statsFile.json> [--bench <N>]
 ```
 
+Типовой рабочий запуск:
+```bash
+--mesh "assets/test_mesh.obj" --bones-weights "assets/bone_weight.json" --inverse-bind-pose "assets/inverse_bind_pose.json" --new-pose "assets/new_pose.json" --output "result_mesh.obj" --stats stats.json
+```
+
 ## Формат `boneWeightFile.json`
 ```json
 {
@@ -82,9 +87,14 @@ cmake --build --preset build-win-release
 - `--bench` принимает только положительное целое число.
 
 # Оптимизация
+Особенности текущего тестового стенда, которые следует учитывать при анализе результатов оптимизации:
+- Низкополигональный меш и малое количество костей: имеем небольшой набор данных, которые могут очень хорошо помещаться в кеш практически любой архитектуры (в частности нижнего уровня). На реальных моделях данных и операций работы с кешем будет гораздо больше. Рекомендуется тестировать на нескольих типах моделей.
+- Тестирование и результаты приводятся для определённого железа, чтобы оценить алгоритмы требуется большая выборка стендов.
+- Работа ведётся с одной моделью, что опять же делает алгоритмы более кеш-дружественными. В реальных играх чаще всего анимируется множество объектов, в связи с чем чаще необходимо переключать кеш-контекст.
+- Мы игнорируем небольшую погрешность, возникающую при парсинге дробных значений.
 
 Ниже представлены итерации оптимизации и результаты стресс-тестирования:
-- Базовая версия 1.0
+- 1.0 Базовая версия 
 "bench": {
     "runs": 10000,
     "min_microseconds": 78.700,
@@ -92,4 +102,13 @@ cmake --build --preset build-win-release
     "mean_microseconds": 137.157,
     "median_microseconds": 138.500,
     "stddev_microseconds": 14.750
+  }
+- 1.1 Версия с оптимизированными лэйаутами данных (объединили всё, что можно было для горячего цикла, переход SOA -> AOS), тем не менее результат остался практически таким же, но в теории на других архитектурах может быть буст:
+"bench": {
+    "runs": 10000,
+    "min_microseconds": 135.100,
+    "max_microseconds": 294.400,
+    "mean_microseconds": 137.542,
+    "median_microseconds": 135.700,
+    "stddev_microseconds": 7.487
   }
