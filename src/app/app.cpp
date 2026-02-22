@@ -3,6 +3,7 @@
 #include <chrono>
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace transformer
@@ -41,14 +42,17 @@ int SkinningApp::run(const AppInput& input) const
         Mesh skinned_mesh;
         for (std::size_t run_index = 0; run_index < input.bench_runs; ++run_index)
         {
-            const auto skin_start = std::chrono::steady_clock::now();
             skinned_mesh = mesh_skinner_.skin(source_mesh, bone_weights_data, bone_pose_data, profiler);
-            const auto skin_end = std::chrono::steady_clock::now();
 
             if (input.bench_runs > 1)
             {
-                const double run_us = std::chrono::duration<double, std::micro>(skin_end - skin_start).count();
-                bench_runs_microseconds.push_back(run_us);
+                const std::vector<TimingEntry>& entries = profiler.entries();
+                if (entries.empty() || entries.back().stage != "cpu_skinning")
+                {
+                    throw std::runtime_error("Internal profiler error: missing cpu_skinning timing entry");
+                }
+
+                bench_runs_microseconds.push_back(entries.back().microseconds);
             }
         }
 
