@@ -12,6 +12,14 @@ Mesh MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
 
     Mesh result_mesh = source_mesh;
 
+    // Precompute skinning matrices for each bone to avoid redundant multiplications
+    auto precomputed_skinning_matrixes = std::vector<Mat4>();
+    precomputed_skinning_matrixes.reserve(bone_pose_data.bone_poses.size());
+    for (std::size_t bone_index = 0; bone_index < bone_pose_data.bone_poses.size(); ++bone_index)
+    {
+        precomputed_skinning_matrixes.push_back(multiply(bone_pose_data.bone_poses[bone_index][1], bone_pose_data.bone_poses[bone_index][0]));
+    }
+
     for (std::size_t vertex_index = 0; vertex_index < source_mesh.vertex_count; ++vertex_index)
     {
         const Mesh::Entry& source_entry = source_mesh.entries[vertex_index];
@@ -32,8 +40,7 @@ Mesh MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
                 continue;
             }
 
-            const Mat4 skinning_matrix =
-                multiply(bone_pose_data.bone_poses[bone_index][1], bone_pose_data.bone_poses[bone_index][0]);
+            const Mat4 skinning_matrix = precomputed_skinning_matrixes[bone_index];
             const Vec4 transformed_position = multiply(skinning_matrix, source_position_h);
 
             blended_position.x += transformed_position.x * weight;
