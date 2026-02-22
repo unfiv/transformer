@@ -1,10 +1,15 @@
 #pragma once
 
-#include "core/profiler.hpp"
-#include "core/types.hpp"
+#include "core/math_types.hpp"
+
+#include <string>
+#include <vector>
 
 namespace transformer
 {
+
+class Profiler;
+struct StatsReport;
 
 class IMeshReader
 {

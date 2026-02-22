@@ -59,7 +59,29 @@ endif()
 
 # ------------------------------------------------------------------------------
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.hpp)
+set(SOURCES
+    src/app/app.cpp
+    src/core/math_utils.cpp
+    src/core/profiler.cpp
+    src/io/json_readers.cpp
+    src/io/obj_io.cpp
+    src/main.cpp
+    src/skinning/mesh_skinner.cpp
+)
+
+set(ALL_SOURCE_FILES
+    ${SOURCES}
+    src/app/app.hpp
+    src/core/app_input.hpp
+    src/core/math_types.hpp
+    src/core/math_utils.hpp
+    src/core/profiler.hpp
+    src/core/types.hpp
+    src/io/io_interfaces.hpp
+    src/io/json_readers.hpp
+    src/io/obj_io.hpp
+    src/skinning/mesh_skinner.hpp
+)
 
 # Formatter
 find_program(CLANG_FORMAT_EXE NAMES clang-format clang-format.exe)
@@ -70,7 +92,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.clang-format" OR EXISTS "${CMAKE_SOURCE_DIR}/.cl
 endif()
 if(CLANG_FORMAT_EXE)
     add_custom_target(format
-        COMMAND ${CLANG_FORMAT_EXE} -i ${SOURCES}
+        COMMAND ${CLANG_FORMAT_EXE} -i ${ALL_SOURCE_FILES}
         COMMENT "Formatting all source files in src/"
     )
 else()
@@ -103,7 +125,7 @@ set(ASSETS_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 if(EXISTS "${ASSETS_SOURCE_DIR}")
     # Keep assets near executable for local runs.
-    add_custom_target(copy_assets ALL
+    add_custom_target(copy_assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${ASSETS_SOURCE_DIR}"
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"

@@ -1,4 +1,5 @@
 #include "app/app.hpp"
+#include "core/profiler.hpp"
 
 #include <chrono>
 #include <exception>

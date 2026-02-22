@@ -1,4 +1,5 @@
 #include "io/obj_io.hpp"
+#include "core/profiler.hpp"
 
 #include <fstream>
 #include <sstream>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/types.hpp"
+#include "core/math_types.hpp"
 
 namespace transformer
 {

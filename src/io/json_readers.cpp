@@ -1,4 +1,5 @@
 #include "io/json_readers.hpp"
+#include "core/profiler.hpp"
 
 #include <algorithm>
 #include <cctype>

@@ -1,6 +1,7 @@
 #include "skinning/mesh_skinner.hpp"
 
 #include "core/math_utils.hpp"
+#include "core/profiler.hpp"
 
 #include <stdexcept>
 
