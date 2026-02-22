@@ -12,7 +12,8 @@ void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
 
     // 1. Precompute skinning matrices for each bone to avoid redundant multiplications
     // 2. Another trick is is to use last matrix as empty one (255) with identity values to avoid branching
-    std::array<Mat4, 256> precomputed_skinning_matrixes{};
+    auto skinning_matrices = std::make_unique<std::array<Mat4, 256>>();
+    std::array<Mat4, 256>& precomputed_skinning_matrixes = *skinning_matrices;
     for (std::size_t bone_index = 0; bone_index < bone_pose_data.bone_poses.size(); ++bone_index)
     {
         precomputed_skinning_matrixes[bone_index] = multiply(bone_pose_data.bone_poses[bone_index][1], bone_pose_data.bone_poses[bone_index][0]);
