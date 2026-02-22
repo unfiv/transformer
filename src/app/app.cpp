@@ -29,8 +29,18 @@ int SkinningApp::run(const AppInput& input) const
 
     try
     {
-        const Mesh source_mesh = mesh_reader_.read(input.mesh_file, profiler);
+        Mesh source_mesh = mesh_reader_.read(input.mesh_file, profiler);
         const BoneWeightsData bone_weights_data = bone_weights_reader_.read(input.weights_file, profiler);
+
+        if (source_mesh.vertex_count != bone_weights_data.per_vertex_weights.size())
+        {
+            throw std::runtime_error("Vertex count mismatch between mesh and skinning weights");
+        }
+
+        for (std::size_t vertex_index = 0; vertex_index < source_mesh.vertex_count; ++vertex_index)
+        {
+            source_mesh.entries[vertex_index].bone_weights = bone_weights_data.per_vertex_weights[vertex_index];
+        }
 
         BonePoseData bone_pose_data;
         const std::vector<Mat4> inverse_bind_pose =
@@ -54,7 +64,7 @@ int SkinningApp::run(const AppInput& input) const
         Mesh skinned_mesh;
         for (std::size_t run_index = 0; run_index < input.bench_runs; ++run_index)
         {
-            skinned_mesh = mesh_skinner_.skin(source_mesh, bone_weights_data, bone_pose_data, profiler);
+            skinned_mesh = mesh_skinner_.skin(source_mesh, bone_pose_data, profiler);
 
             if (input.bench_runs > 1)
             {

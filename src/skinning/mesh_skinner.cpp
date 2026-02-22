@@ -3,27 +3,20 @@
 #include "core/math_utils.hpp"
 #include "core/profiler.hpp"
 
-#include <stdexcept>
-
 namespace transformer
 {
 
-Mesh MeshSkinner::skin(const Mesh& source_mesh, const BoneWeightsData& bone_weights_data, const BonePoseData& bone_pose_data,
-                       Profiler& profiler) const
+Mesh MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_data, Profiler& profiler) const
 {
     const auto scope = profiler.stage("cpu_skinning");
-
-    if (source_mesh.vertex_count != bone_weights_data.per_vertex_weights.size())
-    {
-        throw std::runtime_error("Vertex count mismatch between mesh and skinning weights");
-    }
 
     Mesh result_mesh = source_mesh;
 
     for (std::size_t vertex_index = 0; vertex_index < source_mesh.vertex_count; ++vertex_index)
     {
-        const Vec3& source_position = source_mesh.entries[vertex_index].vertex;
-        const VertexBoneWeights& vertex_bone_weights = bone_weights_data.per_vertex_weights[vertex_index];
+        const Mesh::Entry& source_entry = source_mesh.entries[vertex_index];
+        const Vec3& source_position = source_entry.vertex;
+        const VertexBoneWeights& vertex_bone_weights = source_entry.bone_weights;
 
         Vec4 blended_position{ 0.0F, 0.0F, 0.0F, 0.0F };
         const Vec4 source_position_h{ source_position.x, source_position.y, source_position.z, 1.0F };

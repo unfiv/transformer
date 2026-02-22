@@ -40,10 +40,11 @@ struct Mesh
     struct Entry
     {
         Vec3 vertex{};
-        std::int16_t index = -1;
+        VertexBoneWeights bone_weights{};
     };
 
     std::vector<Entry> entries;
+    std::vector<std::int16_t> indices;
     std::size_t vertex_count = 0;
 };
 
