@@ -10,7 +10,7 @@ class Profiler;
 class MeshSkinner
 {
 public:
-    Mesh skin(const Mesh& source_mesh, const BonePoseData& bone_pose_data, Profiler& profiler) const;
+    void skin(const Mesh& source_mesh, const BonePoseData& bone_pose_data, Profiler& profiler, Mesh& result_mesh) const;
 };
 
 } // namespace transformer

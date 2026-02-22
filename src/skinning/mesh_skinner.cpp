@@ -6,11 +6,10 @@
 namespace transformer
 {
 
-Mesh MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_data, Profiler& profiler) const
+void MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_data, Profiler& profiler, Mesh& result_mesh) const
 {
     const auto scope = profiler.stage("cpu_skinning");
 
-    Mesh result_mesh = source_mesh;
 
     // Precompute skinning matrices for each bone to avoid redundant multiplications
     auto precomputed_skinning_matrixes = std::vector<Mat4>();
@@ -64,8 +63,6 @@ Mesh MeshSkinner::skin(const Mesh& source_mesh, const BonePoseData& bone_pose_da
 
         result_mesh.entries[vertex_index].vertex = divide_by_w(blended_position);
     }
-
-    return result_mesh;
 }
 
 } // namespace transformer

@@ -61,10 +61,10 @@ int SkinningApp::run(const AppInput& input) const
         std::vector<double> bench_runs_microseconds;
         bench_runs_microseconds.reserve(input.bench_runs);
 
-        Mesh skinned_mesh;
+        Mesh skinned_mesh = source_mesh;
         for (std::size_t run_index = 0; run_index < input.bench_runs; ++run_index)
         {
-            skinned_mesh = mesh_skinner_.skin(source_mesh, bone_pose_data, profiler);
+            mesh_skinner_.skin(source_mesh, bone_pose_data, profiler, skinned_mesh);
 
             if (input.bench_runs > 1)
             {
