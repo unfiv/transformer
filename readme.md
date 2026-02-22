@@ -112,3 +112,12 @@ cmake --build --preset build-win-release
     "median_microseconds": 135.700,
     "stddev_microseconds": 7.487
   }
+- 1.2 Версия с прекомпилированной матрицей для скиннинга, мы сократили количество перемножений с 4400 до 33 (количество костей), убрали избыточные операции. Одновременно должны были "раскрыться" предыдущие оптимизации по лэйауту:  
+"bench": {
+    "runs": 10000,
+    "min_microseconds": 47.400,
+    "max_microseconds": 637.400,
+    "mean_microseconds": 49.582,
+    "median_microseconds": 47.800,
+    "stddev_microseconds": 12.631
+  }
