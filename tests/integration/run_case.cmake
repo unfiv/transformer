@@ -68,7 +68,13 @@ foreach(required_var IN LISTS REQUIRED_VARS)
     endif()
 endforeach()
 
-set(CASE_OUTPUT_DIR "${CMAKE_BINARY_DIR}/integration/${CASE_NAME}")
+if(DEFINED OUTPUT_ROOT_DIR)
+    set(_integration_output_root "${OUTPUT_ROOT_DIR}")
+else()
+    set(_integration_output_root "${CMAKE_BINARY_DIR}/tests/integration")
+endif()
+
+set(CASE_OUTPUT_DIR "${_integration_output_root}/${CASE_NAME}")
 file(MAKE_DIRECTORY "${CASE_OUTPUT_DIR}")
 
 set(ACTUAL_OUTPUT_FILE "${CASE_OUTPUT_DIR}/result_mesh.obj")
