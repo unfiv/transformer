@@ -11,7 +11,7 @@ if(NOT DEFINED PARAMS_FILE)
     message(FATAL_ERROR "PARAMS_FILE is required")
 endif()
 if(NOT DEFINED RUNS)
-    set(RUNS 100)
+    set(RUNS 10000)
 endif()
 
 if(NOT EXISTS "${PARAMS_FILE}")

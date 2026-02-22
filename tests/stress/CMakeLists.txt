@@ -13,7 +13,7 @@ if(NOT DEFINED STRESS_PARAMS_FILE)
     set(STRESS_PARAMS_FILE "${STRESS_CASE_DIR}/params.txt")
 endif()
 if(NOT DEFINED STRESS_RUNS)
-    set(STRESS_RUNS 100)
+    set(STRESS_RUNS 10000)
 endif()
 
 add_custom_target(stress
