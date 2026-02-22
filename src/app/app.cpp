@@ -33,9 +33,20 @@ int SkinningApp::run(const AppInput& input) const
         const BoneWeightsData bone_weights_data = bone_weights_reader_.read(input.weights_file, profiler);
 
         BonePoseData bone_pose_data;
-        bone_pose_data.inverse_bind_pose =
+        const std::vector<Mat4> inverse_bind_pose =
             bone_pose_reader_.read_matrices(input.inverse_bind_pose_file, profiler, "read_inverse_bind_pose_json");
-        bone_pose_data.new_pose = bone_pose_reader_.read_matrices(input.new_pose_file, profiler, "read_new_pose_json");
+        const std::vector<Mat4> new_pose = bone_pose_reader_.read_matrices(input.new_pose_file, profiler, "read_new_pose_json");
+
+        if (inverse_bind_pose.size() != new_pose.size())
+        {
+            throw std::runtime_error("Bone count mismatch between inverse bind pose and new pose");
+        }
+
+        bone_pose_data.bone_poses.reserve(inverse_bind_pose.size());
+        for (std::size_t i = 0; i < inverse_bind_pose.size(); ++i)
+        {
+            bone_pose_data.bone_poses.push_back({ inverse_bind_pose[i], new_pose[i] });
+        }
 
         std::vector<double> bench_runs_microseconds;
         bench_runs_microseconds.reserve(input.bench_runs);

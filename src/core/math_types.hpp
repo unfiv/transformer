@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -36,8 +37,14 @@ struct VertexBoneWeights
 
 struct Mesh
 {
-    std::vector<Vec3> positions;
-    std::vector<std::int16_t> indices;
+    struct Entry
+    {
+        Vec3 vertex{};
+        std::int16_t index = -1;
+    };
+
+    std::vector<Entry> entries;
+    std::size_t vertex_count = 0;
 };
 
 struct BoneWeightsData
@@ -47,8 +54,8 @@ struct BoneWeightsData
 
 struct BonePoseData
 {
-    std::vector<Mat4> inverse_bind_pose;
-    std::vector<Mat4> new_pose;
+    // [bone_index][0 = inverse_bind_pose, 1 = new_pose]
+    std::vector<std::array<Mat4, 2>> bone_poses;
 };
 
 } // namespace transformer
